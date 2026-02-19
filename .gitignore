@@ -1,0 +1,66 @@
+# Build directories
+/build/
+/bin/
+/lib/
+/out/
+/dist/
+
+# CMake artifacts
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+install_manifest.txt
+Testing/
+CTestTestfile.cmake
+cmake-build-*/
+
+# Compiled object files, libraries, executables
+*.o
+*.obj
+*.lo
+*.slo
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+*.exe
+
+# CUDA build artifacts
+*.cubin
+*.ptx
+*.fatbin
+*.nvptx
+*.cu.o
+*.linkinfo
+*.nvvp
+*.nvp
+*.nvprof
+*.nsight
+
+# Visual Studio / IDE
+.vs/
+.vscode/
+.idea/
+
+# Debug / profiling
+*.pdb
+*.dmp
+*.opendb
+
+# Logs and temporary files
+*.log
+*~
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# OneDrive temporary files
+~$*
