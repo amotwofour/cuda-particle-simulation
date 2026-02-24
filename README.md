@@ -2,7 +2,7 @@
 
 Just a simple particle simulation using Cuda, as I wanted to work on my C++ skills and learn something new. Still a work in progress.
 
-# Compile using this so the compiler stops complaining about it not finding `cuda_gl_interop.h`
+## Compile using this so the compiler stops complaining about it not finding `cuda_gl_interop.h`
 ```bash
 nvcc main.cpp simulation.cu \
 -I/usr/local/cuda/targets/x86_64-linux/include \
