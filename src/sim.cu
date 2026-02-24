@@ -1,64 +1,70 @@
 #include "Simulation.cuh"
 #include <cuda_runtime.h>
-#include <vector>
 
-__global__ void updateParticles(float *posX, float *posY,
-                                float *velX, float *velY,
-                                float dt, int n)
+__global__ void updateParticles(
+    float2 *positions,
+    float2 *velocities,
+    float dt,
+    int n)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (idx < n) {
-        float g = -9.81f; // Gravitational acceleration
-        velY[idx] += g * dt; // Update velocity with gravity
-        posX[idx] += velX[idx] * dt; // Update position X
-        posY[idx] += velY[idx] * dt; // Update position Y
+    if (idx < n)
+    {
+        // Gravity
+        velocities[idx].y += -9.81f * dt;
+
+        // Integrate motion
+        positions[idx].x += velocities[idx].x * dt;
+        positions[idx].y += velocities[idx].y * dt;
+
+        // Bounce floor
+        if (positions[idx].y < -1.0f)
+        {
+            positions[idx].y = -1.0f;
+            velocities[idx].y *= -0.8f;
+        }
     }
 }
 
-Simulation::Simulation(int n) : n(n) {
-    std::vector<float> h_posX(n);
-    std::vector<float> h_posY(n);
-    std::vector<float> h_velX(n);
-    std::vector<float> h_velY(n);
+Simulation::Simulation(int n) : n(n)
+{
+    cudaMalloc(&d_vel, n * sizeof(float2));
 
-    for (int i = 0; i < n; i++) {
-        h_posX[i] = 0.0f; // Initial X position
-        h_posY[i] = 10.0f; // Initial Y position
-        h_velX[i] = 0.0f; // Initial X velocity
-        h_velY[i] = 0.0f; // Initial Y velocity
-    }
-    
-    cudaMalloc(&d_posX, n * sizeof(float));
-    cudaMalloc(&d_posY, n * sizeof(float));
-    cudaMalloc(&d_velX, n * sizeof(float));
-    cudaMalloc(&d_velY, n * sizeof(float));
-
-    cudaMemcpy(d_posX, h_posX.data(), n * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_posY, h_posY.data(), n * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_velX, h_velX.data(), n * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_velY, h_velY.data(), n * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemset(d_vel, 0, n * sizeof(float2));
 }
 
-Simulation::~Simulation() {
-    cudaFree(d_posX);
-    cudaFree(d_posY);
-    cudaFree(d_velX);
-    cudaFree(d_velY);
+Simulation::~Simulation()
+{
+    cudaFree(d_vel);
 }
 
-void Simulation::step(float dt) {
+void Simulation::setVBO(cudaGraphicsResource *vboResource)
+{
+    this->vboResource = vboResource;
+}
+
+void Simulation::step(float dt)
+{
+    float2 *d_positions;
+
+    size_t num_bytes;
+
+    cudaGraphicsMapResources(1, &vboResource, 0);
+
+    cudaGraphicsResourceGetMappedPointer(
+        (void **)&d_positions,
+        &num_bytes,
+        vboResource);
+
     int threads = 256;
     int blocks = (n + threads - 1) / threads;
 
     updateParticles<<<blocks, threads>>>(
-        d_posX, d_posY, d_velX, d_velY, dt, n
-    );
+        d_positions,
+        d_vel,
+        dt,
+        n);
 
-    cudaDeviceSynchronize(); // Wait for the kernel to finish
-}
-
-void Simulation::downloadPositions(float* posX, float* posY) {
-    cudaMemcpy(posX, d_posX, n * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy(posY, d_posY, n * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaGraphicsUnmapResources(1, &vboResource, 0);
 }
