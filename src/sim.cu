@@ -1,5 +1,6 @@
 #include "Simulation.cuh"
 #include <cuda_runtime.h>
+#include <vector>
 
 __global__ void updateParticles(
     float2 *positions,
@@ -27,7 +28,7 @@ __global__ void updateParticles(
     }
 }
 
-Simulation::Simulation(int n) : n(n)
+Simulation::Simulation(int n) : n(n), vboResource(nullptr)
 {
     cudaMalloc(&d_vel, n * sizeof(float2));
 
@@ -46,6 +47,11 @@ void Simulation::setVBO(cudaGraphicsResource *vboResource)
 
 void Simulation::step(float dt)
 {
+    if (!vboResource)
+    {
+        return;
+    }
+
     float2 *d_positions;
 
     size_t num_bytes;
@@ -67,4 +73,32 @@ void Simulation::step(float dt)
         n);
 
     cudaGraphicsUnmapResources(1, &vboResource, 0);
+}
+
+void Simulation::downloadPositions(float *posX, float *posY)
+{
+    if (!vboResource || !posX || !posY)
+    {
+        return;
+    }
+
+    float2 *d_positions;
+    size_t num_bytes;
+
+    cudaGraphicsMapResources(1, &vboResource, 0);
+    cudaGraphicsResourceGetMappedPointer(
+        (void **)&d_positions,
+        &num_bytes,
+        vboResource);
+
+    std::vector<float2> h_positions(n);
+    cudaMemcpy(h_positions.data(), d_positions, n * sizeof(float2), cudaMemcpyDeviceToHost);
+
+    cudaGraphicsUnmapResources(1, &vboResource, 0);
+
+    for (int i = 0; i < n; ++i)
+    {
+        posX[i] = h_positions[i].x;
+        posY[i] = h_positions[i].y;
+    }
 }
