@@ -9,22 +9,24 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(CUDAToolkit REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
+find_package(GLEW REQUIRED)
 
 set(SOURCES
     src/main.cpp
     src/sim.cu
 )
 
-add_executable(cuda_cpp_project ${SOURCES})
+add_executable(particles ${SOURCES})
 
-target_include_directories(cuda_cpp_project PRIVATE
+target_include_directories(particles PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CUDAToolkit_INCLUDE_DIRS}
 )
 
-target_link_libraries(cuda_cpp_project PRIVATE
+target_link_libraries(particles PRIVATE
     CUDA::cudart
     CUDA::cuda_driver
     OpenGL::GL
+    GLEW::GLEW
     glfw
 )

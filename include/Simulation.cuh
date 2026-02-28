@@ -1,25 +1,19 @@
 #pragma once
-#include <cuda_gl_interop.h>
+#include <cuda_runtime.h>
 
-class Simulation {
-    public:
-        Simulation(int n);
-        ~Simulation();
+class Simulation
+{
+public:
+    Simulation(int n);
+    ~Simulation();
 
-        void step(float dt);
-        void downloadPositions(float* posX, float* posY);
-        void setVBO(struct cudaGraphicsResource* vboResource);
+    void step(float dt);
 
-        private:
-            int n;
+    void downloadPositions(float *posX, float *posY);
 
-            /*
-            float* d_posX;
-            float* d_posY;
-            float* d_velX;
-            float* d_velY;
-            */
-            float2* d_vel;
+private:
+    int n;
 
-            cudaGraphicsResource* vboResource;
+    float2 *d_pos;
+    float2 *d_vel;
 };
