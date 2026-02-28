@@ -12,4 +12,3 @@ $ nvcc src/main.cpp src/sim.cu \
     -o particles
 $ ./build/particles
 ```
-```
