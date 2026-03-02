@@ -7,7 +7,7 @@ class Simulation {
         ~Simulation();
 
         void step(float dt);
-        void downloadPositions(float* posX, float* posY);
+        void downloadPositions(float* posX, float* posY, float* posZ);
         void setVBO(struct cudaGraphicsResource* vboResource);
 
         private:
@@ -19,7 +19,7 @@ class Simulation {
             float* d_velX;
             float* d_velY;
             */
-            float2* d_vel;
+            float3* d_vel;
 
             cudaGraphicsResource* vboResource;
 };

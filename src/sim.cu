@@ -3,8 +3,8 @@
 #include <vector>
 
 __global__ void updateParticles(
-    float2 *positions,
-    float2 *velocities,
+    float3 *positions,
+    float3 *velocities,
     float dt,
     int n)
 {
@@ -18,6 +18,18 @@ __global__ void updateParticles(
         // Integrate motion
         positions[idx].x += velocities[idx].x * dt;
         positions[idx].y += velocities[idx].y * dt;
+        positions[idx].z += velocities[idx].z * dt;
+
+        if (positions[idx].x < -1.0f)
+        {
+            positions[idx].x = -1.0f;
+            velocities[idx].x *= -0.8f;
+        }
+        if (positions[idx].x > 1.0f)
+        {
+            positions[idx].x = 1.0f;
+            velocities[idx].x *= -0.8f;
+        }
 
         // Bounce floor
         if (positions[idx].y < -1.0f)
@@ -25,14 +37,30 @@ __global__ void updateParticles(
             positions[idx].y = -1.0f;
             velocities[idx].y *= -0.8f;
         }
+        if (positions[idx].y > 1.0f)
+        {
+            positions[idx].y = 1.0f;
+            velocities[idx].y *= -0.8f;
+        }
+
+        if (positions[idx].z < -1.0f)
+        {
+            positions[idx].z = -1.0f;
+            velocities[idx].z *= -0.8f;
+        }
+        if (positions[idx].z > 1.0f)
+        {
+            positions[idx].z = 1.0f;
+            velocities[idx].z *= -0.8f;
+        }
     }
 }
 
 Simulation::Simulation(int n) : n(n), vboResource(nullptr)
 {
-    cudaMalloc(&d_vel, n * sizeof(float2));
+    cudaMalloc(&d_vel, n * sizeof(float3));
 
-    cudaMemset(d_vel, 0, n * sizeof(float2));
+    cudaMemset(d_vel, 0, n * sizeof(float3));
 }
 
 Simulation::~Simulation()
@@ -52,7 +80,7 @@ void Simulation::step(float dt)
         return;
     }
 
-    float2 *d_positions;
+    float3 *d_positions;
 
     size_t num_bytes;
 
@@ -75,14 +103,14 @@ void Simulation::step(float dt)
     cudaGraphicsUnmapResources(1, &vboResource, 0);
 }
 
-void Simulation::downloadPositions(float *posX, float *posY)
+void Simulation::downloadPositions(float *posX, float *posY, float *posZ)
 {
-    if (!vboResource || !posX || !posY)
+    if (!vboResource || !posX || !posY || !posZ)
     {
         return;
     }
 
-    float2 *d_positions;
+    float3 *d_positions;
     size_t num_bytes;
 
     cudaGraphicsMapResources(1, &vboResource, 0);
@@ -91,8 +119,8 @@ void Simulation::downloadPositions(float *posX, float *posY)
         &num_bytes,
         vboResource);
 
-    std::vector<float2> h_positions(n);
-    cudaMemcpy(h_positions.data(), d_positions, n * sizeof(float2), cudaMemcpyDeviceToHost);
+    std::vector<float3> h_positions(n);
+    cudaMemcpy(h_positions.data(), d_positions, n * sizeof(float3), cudaMemcpyDeviceToHost);
 
     cudaGraphicsUnmapResources(1, &vboResource, 0);
 
@@ -100,5 +128,6 @@ void Simulation::downloadPositions(float *posX, float *posY)
     {
         posX[i] = h_positions[i].x;
         posY[i] = h_positions[i].y;
+        posZ[i] = h_positions[i].z;
     }
 }
