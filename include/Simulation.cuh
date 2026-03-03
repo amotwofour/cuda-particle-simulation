@@ -19,7 +19,7 @@ class Simulation {
             float* d_velX;
             float* d_velY;
             */
-            float3* d_vel;
+            float3* d_vel; // use float3 instead of float2 for 3d velocity
 
             cudaGraphicsResource* vboResource;
 };
