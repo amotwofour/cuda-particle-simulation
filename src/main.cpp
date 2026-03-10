@@ -54,6 +54,39 @@ int main()
     glViewport(0, 0, 800, 600);
 
     glPointSize(3.0f);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    std::unique_ptr<Simulation> sim(new Simulation(particleCount));
+    std::vector<float> posX(particleCount), posY(particleCount), posZ(particleCount);
+
+    auto refreshWindowTitle = [&]() {
+        const std::string title = "CUDA Particle Simulation - Count: " + std::to_string(particleCount) + " | +/- to adjust";
+        glfwSetWindowTitle(window, title.c_str());
+    };
+
+    auto rebuildSimulation = [&]() {
+        sim.reset(new Simulation(particleCount));
+        posX.assign(particleCount, 0.0f);
+        posY.assign(particleCount, 0.0f);
+        posZ.assign(particleCount, 0.0f);
+        refreshWindowTitle();
+    };
+
+    refreshWindowTitle();
+    bool increaseKeyHeld = false;
+    bool decreaseKeyHeld = false;
+
+    float cameraX = 0.0f;
+    float cameraY = 0.0f;
+    float cameraZ = 3.5f;
+    float yawDegrees = -90.0f;
+    float pitchDegrees = 0.0f;
+    double lastMouseX = 0.0;
+    double lastMouseY = 0.0;
+    glfwGetCursorPos(window, &lastMouseX, &lastMouseY);
+    double lastFrameTime = glfwGetTime();
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
