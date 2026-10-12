@@ -5,8 +5,8 @@
 #include <cstdlib>
 
 __global__ void updateParticles(
-    float2 *positions,
-    float2 *velocities,
+    float3 *positions,
+    float3 *velocities,
     float dt,
     int n)
 {
@@ -22,12 +22,40 @@ __global__ void updateParticles(
         // Integrate
         positions[idx].x += velocities[idx].x * dt;
         positions[idx].y += velocities[idx].y * dt;
+        positions[idx].z += velocities[idx].z * dt;
+
+        if (positions[idx].x < -1.0f)
+        {
+            positions[idx].x = -1.0f;
+            velocities[idx].x *= -0.8f;
+        }
+        if (positions[idx].x > 1.0f)
+        {
+            positions[idx].x = 1.0f;
+            velocities[idx].x *= -0.8f;
+        }
 
         // Floor bounce
         if (positions[idx].y < -1.0f)
         {
             positions[idx].y = -1.0f;
             velocities[idx].y *= -0.8f;
+        }
+        if (positions[idx].y > 1.0f)
+        {
+            positions[idx].y = 1.0f;
+            velocities[idx].y *= -0.8f;
+        }
+
+        if (positions[idx].z < -1.0f)
+        {
+            positions[idx].z = -1.0f;
+            velocities[idx].z *= -0.8f;
+        }
+        if (positions[idx].z > 1.0f)
+        {
+            positions[idx].z = 1.0f;
+            velocities[idx].z *= -0.8f;
         }
     }
 }
@@ -89,5 +117,6 @@ void Simulation::downloadPositions(
 
         posX[i] = h_positions[i].x;
         posY[i] = h_positions[i].y;
+        posZ[i] = h_positions[i].z;
     }
 }
